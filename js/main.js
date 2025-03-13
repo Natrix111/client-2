@@ -1,8 +1,9 @@
 Vue.component('Card', {
-    props: ['card'],
+    props: ['card', 'isFirstColumn'],
     data() {
         return {
             newTaskText: '',
+            errorMessage: '',
         };
     },
     template: `
@@ -10,22 +11,68 @@ Vue.component('Card', {
             <h3>{{ card.title }}</h3>
             <ul>
                 <li v-for="(item, i) in card.items" :key="i">
+                    <input type="checkbox" v-model="item.done" @change="$emit('update-progress', card)">
                     {{ item.text }}
+                    <button v-if="isFirstColumn" @click="removeTask(i)" class="remove-task">×</button>
                 </li>
             </ul>
-            <div class="add-task">
-                <input type="text" v-model="newTaskText" placeholder="Добавить задачу" @keyup.enter="addTask">
-                <button @click="addTask">Добавить</button>
+            <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+            <div v-if="isFirstColumn" class="add-task">
+                <input 
+                    type="text" 
+                    v-model="newTaskText" 
+                    placeholder="Добавить задачу" 
+                    @keyup.enter="addTask"
+                    :disabled="card.items.length >= 5"
+                >
+                <button @click="addTask" :disabled="card.items.length >= 5">Добавить</button>
             </div>
+            <p v-if="card.completedAt">Завершено: {{ card.completedAt }}</p>
         </div>
     `,
     methods: {
         addTask() {
-            if (this.newTaskText.trim() === '') return;
+            if (this.card.items.length >= 5) {
+                this.errorMessage = "Максимум 5 задач в карточке.";
+                return;
+            }
+
+            if (this.newTaskText.trim() === '') {
+                this.errorMessage = "Задача не может быть пустой.";
+                return;
+            }
+
             this.card.items.push({ text: this.newTaskText, done: false });
             this.newTaskText = '';
+            this.errorMessage = '';
+            this.$emit('update-progress', this.card);
         },
-    },
+        removeTask(index) {
+            if (this.card.items.length <= 3) {
+                this.errorMessage = "Минимум 3 задачи в карточке.";
+                return;
+            }
+
+            this.card.items.splice(index, 1);
+            this.errorMessage = '';
+            this.$emit('update-progress', this.card);
+        }
+    }
+});
+
+Vue.component('Column', {
+    props: ['cards', 'isBlocked', 'isFirstColumn'],
+    template: `
+        <div class="column-content" :class="{ blocked: isBlocked }">
+            <Card 
+                v-for="card in cards" 
+                :key="card.id" 
+                :card="card" 
+                :isFirstColumn="isFirstColumn"
+                @update-progress="$emit('update-progress', card)" 
+            />
+        </div>
+    `
 });
 
 let app = new Vue({
@@ -34,13 +81,25 @@ let app = new Vue({
         <div class="columns">
             <div class="column">
                 <h2>Колонка 1 (макс. 3)</h2>
-                <button @click="addCard(0)">Добавить карточку</button>
+                <button v-if="columns[0].length < 3" @click="addCard(0)">
+                    Добавить карточку
+                </button>
+                <Column 
+                    :cards="columns[0]" 
+                    :isFirstColumn="true"
+                />
             </div>
             <div class="column">
                 <h2>Колонка 2 (макс. 5)</h2>
+                <Column 
+                    :cards="columns[1]" 
+                />
             </div>
             <div class="column">
                 <h2>Колонка 3 (без ограничений)</h2>
+                <Column 
+                    :cards="columns[2]" 
+                />
             </div>
         </div>
     `,
@@ -61,6 +120,6 @@ let app = new Vue({
             };
 
             this.columns[columnIndex].push(newCard);
-        },
-    },
+        }
+    }
 });
