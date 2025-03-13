@@ -88,12 +88,14 @@ let app = new Vue({
                     :cards="columns[0]" 
                     :isBlocked="isFirstColumnBlocked" 
                     :isFirstColumn="true"
+                    @update-progress="updateProgress" 
                 />
             </div>
             <div class="column">
                 <h2>Колонка 2 (макс. 5)</h2>
                 <Column 
                     :cards="columns[1]" 
+                    @update-progress="updateProgress" 
                 />
             </div>
             <div class="column">
@@ -125,7 +127,33 @@ let app = new Vue({
                 completedAt: null
             };
 
-            this.columns[columnIndex].push(newCard);
+            this.$set(this.columns, columnIndex, [...this.columns[columnIndex], newCard]);
+            this.saveData();
+        },
+        updateProgress(card) {
+            const total = card.items.length;
+            const completed = card.items.filter(i => i.done).length;
+            const progress = completed / total;
+
+            if (total < 3) return;
+
+            let currentColumn = this.columns.findIndex(col => col.includes(card));
+
+            if (progress === 1) {
+                card.completedAt = new Date().toLocaleString();
+                this.moveCard(card, 2);
+            }
+
+            else if (progress >= 0.5 && currentColumn === 0 && this.columns[1].length < 5) {
+                this.moveCard(card, 1);
+            }
+
+            this.saveData();
+        },
+        moveCard(card, newColumnIndex) {
+            let oldColumnIndex = this.columns.findIndex(col => col.includes(card));
+            this.columns[oldColumnIndex] = this.columns[oldColumnIndex].filter(c => c !== card);
+            this.columns[newColumnIndex].push(card);
             this.saveData();
         },
         saveData() {
