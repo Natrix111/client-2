@@ -81,11 +81,12 @@ let app = new Vue({
         <div class="columns">
             <div class="column">
                 <h2>Колонка 1 (макс. 3)</h2>
-                <button v-if="columns[0].length < 3" @click="addCard(0)">
+                <button v-if="columns[0].length < 3" @click="addCard(0)" :disabled="isFirstColumnBlocked">
                     Добавить карточку
                 </button>
                 <Column 
                     :cards="columns[0]" 
+                    :isBlocked="isFirstColumnBlocked" 
                     :isFirstColumn="true"
                 />
             </div>
@@ -108,6 +109,11 @@ let app = new Vue({
             columns: [[], [], []],
         };
     },
+    computed: {
+        isFirstColumnBlocked() {
+            return this.columns[0].length > 0 && this.columns[1].length >= 5;
+        }
+    },
     methods: {
         addCard(columnIndex) {
             if (columnIndex === 0 && this.columns[0].length >= 3) return;
@@ -120,6 +126,19 @@ let app = new Vue({
             };
 
             this.columns[columnIndex].push(newCard);
+            this.saveData();
+        },
+        saveData() {
+            localStorage.setItem("columns", JSON.stringify(this.columns));
+        },
+        loadData() {
+            const savedData = localStorage.getItem("columns");
+            if (savedData) {
+                this.columns = JSON.parse(savedData);
+            }
         }
+    },
+    mounted() {
+        this.loadData();
     }
 });
