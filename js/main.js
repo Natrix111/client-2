@@ -3,22 +3,33 @@ const Card = {
     data() {
         return {
             newTaskText: '',
+            newSubtaskText: '',
             errorMessage: '',
         };
     },
     template: `
       <div class="card">
         <h3>{{ card.title }}</h3>
-        <ul>
+        <ul class="list">
           <li v-for="(item, i) in card.items" :key="item.id">
-            <input type="checkbox" v-model="item.done" @change="$emit('update-progress', card)">
+            <input type="checkbox" 
+                   :disabled="!areAllSubtasksDone(item)" 
+                   v-model="item.done" 
+                   @change="$emit('update-progress', card)">
             {{ item.text }}
+            <button v-if="item.subtasks.length < 2" @click="addSubtask(i)">+</button>
+            <ul>
+                <li v-for="(subtask, j) in item.subtasks" :key="subtask.id">
+                    <input type="checkbox" v-model="subtask.done" @change="updateMainTaskStatus(item, card)">
+                    {{ subtask.text }}
+                </li>
+            </ul>
             <button v-if="isFirstColumn" @click="removeTask(i)" class="remove-task">×</button>
           </li>
         </ul>
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
         <div v-if="isFirstColumn" class="add-task">
-          <input 
+          <input
             type="text" 
             v-model="newTaskText" 
             placeholder="Добавить задачу" 
@@ -42,10 +53,39 @@ const Card = {
                 return;
             }
 
-            this.card.items.push({ id: Date.now(), text: this.newTaskText, done: false });
+            this.card.items.push({
+                id: Date.now(),
+                text: this.newTaskText,
+                done: false,
+                subtasks: []
+            });
             this.newTaskText = '';
             this.errorMessage = '';
             this.$emit('update-progress', this.card);
+        },
+        addSubtask(index) {
+            const item = this.card.items[index];
+            if (item.subtasks.length >= 2) {
+                this.errorMessage = "Максимум 2 подпункта.";
+                return;
+            }
+
+            const subtaskText = prompt("Введите текст подпункта:");
+            if (!subtaskText) return;
+
+            item.subtasks.push({ id: Date.now(), text: subtaskText, done: false });
+            this.$emit('update-progress', this.card);
+        },
+        updateMainTaskStatus(item, card) {
+            if (this.areAllSubtasksDone(item)) {
+                item.done = true;
+            } else {
+                item.done = false;
+            }
+            this.$emit('update-progress', card);
+        },
+        areAllSubtasksDone(item) {
+            return item.subtasks.length === 0 || item.subtasks.every(subtask => subtask.done);
         },
         removeTask(index) {
             if (this.card.items.length <= 3) {
@@ -59,6 +99,7 @@ const Card = {
         },
     },
 };
+
 
 const Column = {
     props: ['cards', 'isBlocked', 'isFirstColumn'],
@@ -123,14 +164,23 @@ const app = new Vue({
         addCard(columnIndex) {
             if (columnIndex === 0 && this.columns[0].length >= 3) return;
 
+            let priority = parseInt(prompt("Введите приоритет карточки (1 - низкий, 2 - средний, 3 - высокий):"), 10);
+            if (![1, 2, 3].includes(priority)) {
+                alert("Некорректный приоритет! Установлен приоритет 1.");
+                priority = 1;
+            }
+
             const newCard = {
                 id: Date.now(),
                 title: `Заметка ${this.columns[columnIndex].length + 1}`,
                 items: [],
                 completedAt: null,
+                priority: priority,
+                createdAt: Date.now()
             };
 
             this.$set(this.columns, columnIndex, [...this.columns[columnIndex], newCard]);
+            this.sortCards(columnIndex);
             this.saveData();
         },
         updateProgress(card) {
@@ -149,12 +199,21 @@ const app = new Vue({
                 this.moveCard(card, 1);
             }
 
+            this.sortCards(currentColumn);
             this.saveData();
+        },
+        sortCards(columnIndex) {
+            if (columnIndex === 2) {
+                this.columns[columnIndex].sort((a, b) => b.createdAt - a.createdAt);
+            } else {
+                this.columns[columnIndex].sort((a, b) => b.priority - a.priority);
+            }
         },
         moveCard(card, newColumnIndex) {
             const oldColumnIndex = this.columns.findIndex((col) => col.includes(card));
             this.columns[oldColumnIndex] = this.columns[oldColumnIndex].filter((c) => c !== card);
             this.columns[newColumnIndex].push(card);
+            this.sortCards(newColumnIndex);
             this.saveData();
         },
         saveData() {

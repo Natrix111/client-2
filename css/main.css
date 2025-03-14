@@ -1,23 +1,37 @@
 body {
     font-family: Arial, sans-serif;
     padding: 20px;
+    background: #f4f4f4;
 }
 
 .columns {
     display: flex;
     justify-content: space-between;
+    gap: 20px;
+}
+
+.list {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .column {
     width: 30%;
-    padding: 10px;
+    padding: 15px;
+    border-radius: 8px;
     border: 1px solid #ccc;
-    background: #f9f9f9;
+    background: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     min-height: 300px;
 }
 
 .column h2 {
     margin-top: 0;
+    text-align: center;
+    font-size: 1.2em;
+    color: #333;
 }
 
 button {
@@ -28,7 +42,14 @@ button {
     background: #4CAF50;
     color: white;
     border: none;
+    border-radius: 5px;
     cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background: #45a049;
 }
 
 .column button:disabled {
@@ -41,10 +62,12 @@ button {
 }
 
 .card {
-    background: white;
-    padding: 10px;
+    background: #fff;
+    padding: 15px;
     margin-bottom: 10px;
+    border-radius: 8px;
     border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .blocked {
@@ -59,19 +82,22 @@ button {
 
 .add-task input {
     flex: 1;
-    padding: 5px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 0.9em;
 }
 
 .add-task button {
     margin-left: 10px;
-    padding: 5px 10px;
+    padding: 8px 12px;
     background: #4CAF50;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.3s ease;
 }
 
 .add-task button:hover {
@@ -85,26 +111,72 @@ button {
 }
 
 ul {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 li {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+li input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.subtasks {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid #ddd;
+}
+
+.subtask {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    padding: 5px;
+    background: #fdfdfd;
+    border-radius: 5px;
+}
+
+.subtask input {
+    transform: scale(1.1);
 }
 
 .remove-task {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 10px;
-    width: 10px;
     background: red;
     border: none;
-    color: #fff;
+    color: white;
+    font-size: 0.8em;
+    padding: 4px 6px;
+    border-radius: 4px;
     cursor: pointer;
-    margin-bottom: 0px;
+    transition: background 0.3s ease;
+}
+
+.remove-task:hover {
+    background: darkred;
+}
+
+.add-subtask {
+    background: #007BFF;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.add-subtask:hover {
+    background: #0056b3;
 }
